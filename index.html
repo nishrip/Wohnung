@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>360° Panorama Viewer – Rundgang 2</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r105/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/panolens@0.12.0/build/panolens.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/Tween.min.js"></script>
+
+  <style>
+    html, body { margin:0; padding:0; overflow:hidden; height:100%; background:black; }
+    #container { width:100vw; height:100vh; position:relative; }
+    #fadeOverlay {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:black; opacity:0; pointer-events:none; z-index:20;
+      transition: opacity 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="fadeOverlay"></div>
+  </div>
+
+  <script>
+    const container = document.getElementById('container');
+    const fadeOverlay = document.getElementById('fadeOverlay');
+
+    const viewer = new PANOLENS.Viewer({
+      container: container,
+      controlBar: true,
+      autoHideInfospot: false
+    });
+
+    const camera = viewer.getCamera();
+
+    // Neue Panorama-Pfade (18 Stück)
+    const panoramaPaths = [];
+    for (let i = 1; i <= 18; i++) {
+      panoramaPaths.push(`pano (${i}).jpg`);
+    }
+
+    const panoramas = [];
+    const loader = new THREE.TextureLoader();
+    let loadedCount = 0;
+
+    function onTextureLoad(texture, index) {
+      const pano = new PANOLENS.ImagePanorama(texture.image.src);
+      panoramas[index] = pano;
+      loadedCount++;
+
+      if (loadedCount === panoramaPaths.length) {
+        setupHotspots();
+        viewer.add(...panoramas);
+        viewer.setPanorama(panoramas[0]); // Start mit dem ersten Panorama
+        viewer.tweenControlCenter(new THREE.Vector3(10, 0, 1), 0);
+      }
+    }
+
+    function preloadPanorama(index) {
+      loader.load(
+        panoramaPaths[index],
+        texture => onTextureLoad(texture, index),
+        undefined,
+        err => console.error(`Failed to load ${panoramaPaths[index]}:`, err)
+      );
+    }
+
+    for (let i = 0; i < panoramaPaths.length; i++) {
+      preloadPanorama(i);
+    }
+
+    function switchPanorama(hotspot, targetPanorama, correspondingTargetHotspot) {
+      viewer.tweenControlCenter(new THREE.Vector3(hotspot.position.x, 0, hotspot.position.z), 1000, TWEEN.Easing.Quadratic.InOut);
+
+      const startFov = camera.fov;
+      const zoomDuration = 1000;
+      let startTime = null;
+
+      function animateZoom(time) {
+        if (!startTime) startTime = time;
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / zoomDuration, 1);
+        camera.fov = startFov + (30 - startFov) * progress;
+        camera.updateProjectionMatrix();
+
+        if (progress < 1) {
+          requestAnimationFrame(animateZoom);
+        } else {
+          fadeOverlay.style.opacity = 1;
+
+          setTimeout(() => {
+            viewer.setPanorama(targetPanorama);
+            viewer.tweenControlCenter(new THREE.Vector3(10, 0, 1), 0);
+            camera.fov = startFov;
+            camera.updateProjectionMatrix();
+
+            setTimeout(() => {
+              fadeOverlay.style.opacity = 0;
+            }, 300);
+          }, 500);
+        }
+      }
+
+      requestAnimationFrame(animateZoom);
+    }
+
+function setupHotspots() {
+  // ---------------- Panorama 1 ----------------
+  const spot1to2 = new PANOLENS.Infospot(250, 'Hotspot1.png');
+  spot1to2.position.set(1700, -1500, -800);
+  const spot1to11 = new PANOLENS.Infospot(250, 'Hotspot2.png');
+  spot1to11.position.set(5500, -1500, 200);
+  panoramas[0].add(spot1to2, spot1to11);
+
+  // ---------------- Panorama 2 ----------------
+  const spot2to1 = new PANOLENS.Infospot(250, 'Hotspot3.png');
+  spot2to1.position.set(-1500, -1500, 600);
+  const spot2to3 = new PANOLENS.Infospot(250, 'Hotspot4.png');
+  spot2to3.position.set(-300, -1500, -2000);
+  const spot2to11 = new PANOLENS.Infospot(250, 'Hotspot5.png');
+  spot2to11.position.set(3800, -1500, 600);
+  const spot2to13 = new PANOLENS.Infospot(250, 'Hotspot41.png');
+  spot2to13.position.set(6000, -1000, -2500);
+  panoramas[1].add(spot2to1, spot2to3, spot2to11, spot2to13);
+
+  // ---------------- Panorama 3 ----------------
+  const spot3to2 = new PANOLENS.Infospot(250, 'Hotspot6.png');
+  spot3to2.position.set(-1900, -1500, -50);
+  const spot3to4 = new PANOLENS.Infospot(250, 'Hotspot7.png');
+  spot3to4.position.set(1000, -1500, 1500);
+  const spot3to6 = new PANOLENS.Infospot(250, 'Hotspot8.png');
+  spot3to6.position.set(2000, -1500, 0);
+  const spot3to10 = new PANOLENS.Infospot(250, 'Hotspot9.png');
+  spot3to10.position.set(0, -1500, -1500);
+  panoramas[2].add(spot3to2, spot3to4, spot3to6, spot3to10);
+
+  // ---------------- Panorama 4 ----------------
+  const spot4to3 = new PANOLENS.Infospot(250, 'Hotspot10.png');
+  spot4to3.position.set(-1500, -1500, -300);
+  const spot4to5 = new PANOLENS.Infospot(250, 'Hotspot11.png');
+  spot4to5.position.set(3000, -1500, -1500);
+  panoramas[3].add(spot4to3, spot4to5);
+
+  // ---------------- Panorama 5 ----------------
+  const spot5to4 = new PANOLENS.Infospot(250, 'Hotspot12.png');
+  spot5to4.position.set(3100, -1500, -300);
+  const spot5to3 = new PANOLENS.Infospot(250, 'Hotspot13.png');
+  spot5to3.position.set(4000, -1500, 350);
+  panoramas[4].add(spot5to4, spot5to3);
+
+  // ---------------- Panorama 6 ----------------
+  const spot6to3 = new PANOLENS.Infospot(250, 'Hotspot14.png');
+  spot6to3.position.set(-1550, -1500, -1250);
+  const spot6to8 = new PANOLENS.Infospot(250, 'Hotspot15.png');
+  spot6to8.position.set(1800,-1500, 500);
+  const spot6to7 = new PANOLENS.Infospot(250, 'Hotspot16.png');
+  spot6to7.position.set(900,-1500, -1550);
+  panoramas[5].add(spot6to3, spot6to8, spot6to7);
+
+  // ---------------- Panorama 7 ----------------
+  const spot7to6 = new PANOLENS.Infospot(250, 'Hotspot17.png');
+  spot7to6.position.set(-1450, -1500, 1100);
+  panoramas[6].add(spot7to6);
+
+  // ---------------- Panorama 8 ----------------
+  const spot8to6 = new PANOLENS.Infospot(250, 'Hotspot18.png');
+  spot8to6.position.set(-900, -1500, -1750);
+  const spot8to9 = new PANOLENS.Infospot(250, 'Hotspot19.png');
+  spot8to9.position.set(1500, -1500, -150);
+  panoramas[7].add(spot8to6, spot8to9);
+
+  // ---------------- Panorama 9 ----------------
+  const spot9to8 = new PANOLENS.Infospot(250, 'Hotspot20.png');
+  spot9to8.position.set(20, -1500, -1600);
+  panoramas[8].add(spot9to8);
+
+  // ---------------- Panorama 10 ----------------
+  const spot10to3 = new PANOLENS.Infospot(250, 'Hotspot21.png');
+  spot10to3.position.set(-1300, -1500, 1000);
+  panoramas[9].add(spot10to3);
+
+  // ---------------- Panorama 11 ----------------
+  const spot11to2 = new PANOLENS.Infospot(250, 'Hotspot22.png');
+  spot11to2.position.set(-1200, -1500, -3250);
+  const spot11to12 = new PANOLENS.Infospot(250, 'Hotspot23.png');
+  spot11to12.position.set(5500, -1100, -1000);
+  const spot11to13 = new PANOLENS.Infospot(250, 'Hotspot24.png');
+  spot11to13.position.set(5000, -1100, 1800);
+  const spot11to16 = new PANOLENS.Infospot(250, 'Hotspot25.png');
+  spot11to16.position.set(-4000, -1500, -500);
+  const spot11to17 = new PANOLENS.Infospot(250, 'Hotspot40.png');
+  spot11to17.position.set(-700, -1500, 3600);
+  panoramas[10].add(spot11to2, spot11to12, spot11to13, spot11to16, spot11to17);
+
+  // ---------------- Panorama 12 ----------------
+  const spot12to11 = new PANOLENS.Infospot(250, 'Hotspot26.png');
+  spot12to11.position.set(5000, -1100, 2400);
+  const spot12to13 = new PANOLENS.Infospot(250, 'Hotspot27.png');
+  spot12to13.position.set(3500, -1500, -3000);
+  const spot12to15 = new PANOLENS.Infospot(250, 'Hotspot28.png');
+  spot12to15.position.set(-1500, -1500, -400);
+  panoramas[11].add(spot12to11, spot12to13, spot12to15);
+
+  // ---------------- Panorama 13 ----------------
+  const spot13to11 = new PANOLENS.Infospot(250, 'Hotspot29.png');
+  spot13to11.position.set(5000, -1100, 80);
+  const spot13to12 = new PANOLENS.Infospot(250, 'Hotspot30.png');
+  spot13to12.position.set(900, -1500, 4000);
+  const spot13to14 = new PANOLENS.Infospot(250, 'Hotspot31.png');
+  spot13to14.position.set(-2500, -1500, 1500);
+  const spot13to2 = new PANOLENS.Infospot(250, 'Hotspot42.png');
+  spot13to2.position.set(6000, -1100, 1000);
+  panoramas[12].add(spot13to11, spot13to12, spot13to14, spot13to2);
+
+  // ---------------- Panorama 14 ----------------
+  const spot14to13 = new PANOLENS.Infospot(250, 'Hotspot32.png');
+  spot14to13.position.set(-3500, -1500, -200);
+  const spot14to15 = new PANOLENS.Infospot(250, 'Hotspot33.png');
+  spot14to15.position.set(-750, -1500, -4800);
+  panoramas[13].add(spot14to13, spot14to15);
+
+  // ---------------- Panorama 15 ----------------
+  const spot15to14 = new PANOLENS.Infospot(250, 'Hotspot34.png');
+  spot15to14.position.set(-4500, -1500, 800);
+  const spot15to12 = new PANOLENS.Infospot(250, 'Hotspot35.png');
+  spot15to12.position.set(-1100, -1500, -1500);
+  panoramas[14].add(spot15to14, spot15to12);
+
+  // ---------------- Panorama 16 ----------------
+  const spot16to11 = new PANOLENS.Infospot(250, 'Hotspot36.png');
+  spot16to11.position.set(-4000, -1500, 1500);
+  panoramas[15].add(spot16to11);
+
+  // ---------------- Panorama 17 ----------------
+  const spot17to11 = new PANOLENS.Infospot(250, 'Hotspot37.png');
+  spot17to11.position.set(-3000, -1500, -2500);
+  const spot17to18 = new PANOLENS.Infospot(250, 'Hotspot38.png');
+  spot17to18.position.set(2500, -1500, -100);
+  panoramas[16].add(spot17to11, spot17to18);
+
+  // ---------------- Panorama 18 ----------------
+  const spot18to17 = new PANOLENS.Infospot(250, 'Hotspot39.png');
+  spot18to17.position.set(2000, -1500, 2000);
+  panoramas[17].add(spot18to17);
+
+  // ---------------- Klick-Events ----------------
+  // Panorama 1
+  spot1to2.addEventListener('click', () => switchPanorama(spot1to2, panoramas[1], spot2to1));
+  spot1to11.addEventListener('click', () => switchPanorama(spot1to11, panoramas[10], spot11to2));
+
+  // Panorama 2
+  spot2to1.addEventListener('click', () => switchPanorama(spot2to1, panoramas[0], spot1to2));
+  spot2to3.addEventListener('click', () => switchPanorama(spot2to3, panoramas[2], spot3to2));
+  spot2to11.addEventListener('click', () => switchPanorama(spot2to11, panoramas[10], spot11to2));
+  spot2to13.addEventListener('click', () => switchPanorama(spot2to13, panoramas[12], spot13to2));
+
+  // Panorama 3
+  spot3to2.addEventListener('click', () => switchPanorama(spot3to2, panoramas[1], spot2to3));
+  spot3to4.addEventListener('click', () => switchPanorama(spot3to4, panoramas[3], spot4to3));
+  spot3to6.addEventListener('click', () => switchPanorama(spot3to6, panoramas[5], spot6to3));
+  spot3to10.addEventListener('click', () => switchPanorama(spot3to10, panoramas[9], spot10to3));
+
+  // Panorama 4
+  spot4to3.addEventListener('click', () => switchPanorama(spot4to3, panoramas[2], spot3to4));
+  spot4to5.addEventListener('click', () => switchPanorama(spot4to5, panoramas[4], spot5to4));
+
+  // Panorama 5
+  spot5to4.addEventListener('click', () => switchPanorama(spot5to4, panoramas[3], spot4to5));
+  spot5to3.addEventListener('click', () => switchPanorama(spot5to3, panoramas[2], spot3to2));
+
+  // Panorama 6
+  spot6to3.addEventListener('click', () => switchPanorama(spot6to3, panoramas[2], spot3to6));
+  spot6to8.addEventListener('click', () => switchPanorama(spot6to8, panoramas[7], spot8to6));
+  spot6to7.addEventListener('click', () => switchPanorama(spot6to7, panoramas[6], spot7to6));
+
+  // Panorama 7
+  spot7to6.addEventListener('click', () => switchPanorama(spot7to6, panoramas[5], spot6to7));
+
+  // Panorama 8
+  spot8to6.addEventListener('click', () => switchPanorama(spot8to6, panoramas[5], spot6to8));
+  spot8to9.addEventListener('click', () => switchPanorama(spot8to9, panoramas[8], spot9to8));
+
+  // Panorama 9
+  spot9to8.addEventListener('click', () => switchPanorama(spot9to8, panoramas[7], spot8to9));
+
+  // Panorama 10
+  spot10to3.addEventListener('click', () => switchPanorama(spot10to3, panoramas[2], spot3to10));
+
+  // Panorama 11
+  spot11to2.addEventListener('click', () => switchPanorama(spot11to2, panoramas[1], spot2to11));
+  spot11to12.addEventListener('click', () => switchPanorama(spot11to12, panoramas[11], spot12to11));
+  spot11to13.addEventListener('click', () => switchPanorama(spot11to13, panoramas[12], spot13to11));
+  spot11to16.addEventListener('click', () => switchPanorama(spot11to16, panoramas[15], spot16to11));
+  spot11to17.addEventListener('click', () => switchPanorama(spot11to17, panoramas[16], spot17to11));
+
+  // Panorama 12
+  spot12to11.addEventListener('click', () => switchPanorama(spot12to11, panoramas[10], spot11to12));
+  spot12to13.addEventListener('click', () => switchPanorama(spot12to13, panoramas[12], spot13to12));
+  spot12to15.addEventListener('click', () => switchPanorama(spot12to15, panoramas[14], spot15to12));
+
+  // Panorama 13
+  spot13to11.addEventListener('click', () => switchPanorama(spot13to11, panoramas[10], spot11to13));
+  spot13to12.addEventListener('click', () => switchPanorama(spot13to12, panoramas[11], spot12to13));
+  spot13to14.addEventListener('click', () => switchPanorama(spot13to14, panoramas[13], spot14to13));
+  spot13to2.addEventListener('click', () => switchPanorama(spot13to2, panoramas[1], spot2to13));
+
+  // Panorama 14
+  spot14to13.addEventListener('click', () => switchPanorama(spot14to13, panoramas[12], spot13to14));
+  spot14to15.addEventListener('click', () => switchPanorama(spot14to15, panoramas[14], spot15to14));
+
+  // Panorama 15
+  spot15to14.addEventListener('click', () => switchPanorama(spot15to14, panoramas[13], spot14to15));
+  spot15to12.addEventListener('click', () => switchPanorama(spot15to12, panoramas[11], spot12to15));
+
+  // Panorama 16
+  spot16to11.addEventListener('click', () => switchPanorama(spot16to11, panoramas[10], spot11to16));
+
+  // Panorama 17
+  spot17to11.addEventListener('click', () => switchPanorama(spot17to11, panoramas[10], spot11to17));
+  spot17to18.addEventListener('click', () => switchPanorama(spot17to18, panoramas[17], spot18to17));
+
+  // Panorama 18
+  spot18to17.addEventListener('click', () => switchPanorama(spot18to17, panoramas[16], spot17to18));
+}
+  </script>
+</body>
+</html>
