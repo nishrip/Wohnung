@@ -54,7 +54,7 @@
       if (loadedCount === panoramaPaths.length) {
         setupHotspots();
         viewer.add(...panoramas);
-        viewer.setPanorama(panoramas[0]); // Start mit dem ersten Panorama
+        viewer.setPanorama(panoramas[1]); // Start mit dem ersten Panorama
         viewer.tweenControlCenter(new THREE.Vector3(10, 0, 1), 0);
       }
     }
@@ -123,7 +123,7 @@ function setupHotspots() {
   const spot2to11 = new PANOLENS.Infospot(250, 'Hotspot5.png');
   spot2to11.position.set(3800, -1500, 600);
   const spot2to13 = new PANOLENS.Infospot(250, 'Hotspot41.png');
-  spot2to13.position.set(6000, -1000, -2500);
+  spot2to13.position.set(6000, -1150, -2800);
   panoramas[1].add(spot2to1, spot2to3, spot2to11, spot2to13);
 
   // ---------------- Panorama 3 ----------------
@@ -217,14 +217,14 @@ function setupHotspots() {
 
   // ---------------- Panorama 14 ----------------
   const spot14to13 = new PANOLENS.Infospot(250, 'Hotspot32.png');
-  spot14to13.position.set(-3500, -1500, -200);
+  spot14to13.position.set(-2800, -1500, -500);
   const spot14to15 = new PANOLENS.Infospot(250, 'Hotspot33.png');
-  spot14to15.position.set(-750, -1500, -4800);
+  spot14to15.position.set(-250, -1350, -4800);
   panoramas[13].add(spot14to13, spot14to15);
 
   // ---------------- Panorama 15 ----------------
   const spot15to14 = new PANOLENS.Infospot(250, 'Hotspot34.png');
-  spot15to14.position.set(-4500, -1500, 800);
+  spot15to14.position.set(-4500, -1250, 700);
   const spot15to12 = new PANOLENS.Infospot(250, 'Hotspot35.png');
   spot15to12.position.set(-1100, -1500, -1500);
   panoramas[14].add(spot15to14, spot15to12);
