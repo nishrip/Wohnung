@@ -54,7 +54,7 @@
       if (loadedCount === panoramaPaths.length) {
         setupHotspots();
         viewer.add(...panoramas);
-        viewer.setPanorama(panoramas[1]); // Start mit dem ersten Panorama
+        viewer.setPanorama(panoramas[0]); // Start mit dem ersten Panorama
         viewer.tweenControlCenter(new THREE.Vector3(10, 0, 1), 0);
       }
     }
